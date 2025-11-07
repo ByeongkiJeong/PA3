@@ -1,86 +1,87 @@
-# PA3: 안전한 Python 빌트인 래퍼 에이전트
+# PA3: Secure Python Built-in Wrapper Agent
 
-Python의 내장 함수(built-in functions)를 안전하게 래핑(wrapping)하여, LLM과 같은 외부 에이전트가 제한된 환경에서 코드를 실행하고 질의에 응답할 수 있도록 돕는 예제 프로젝트입니다.
+This is an example project that helps external agents, such as LLMs, execute code and answer queries in a restricted environment by securely wrapping Python's built-in functions.
 
-## 주요 아이디어
+## Key Ideas
 
-- **안전한 래핑**: `wrapped_builtins.py` 파일은 `print()`, `len()` 등 표준 Python 내장 함수를 `w_` 접두사가 붙은 함수(예: `w_print`, `w_len`)로 감쌉니다. 데코레이터를 사용해 원본 함수의 시그니처를 보존하므로, 에이전트가 함수를 쉽게 이해하고 사용할 수 있습니다.
-- **제한된 환경**: `pa3_initial.py`의 `ChatAgent`는 `tools` 매개변수로 전달된 함수들만 도구로 사용할 수 있습니다. 이를 통해 `eval`이나 `exec`처럼 위험할 수 있는 함수는 제외하고, 허용된 기능만 선택적으로 노출할 수 있습니다.
+- **Secure Wrapping**: The `wrapped_builtins.py` file wraps standard Python built-in functions like `print()` and `len()` into functions with a `w_` prefix (e.g., `w_print`, `w_len`). Decorators are used to preserve the original function signatures, making it easy for the agent to understand and use the functions.
+- **Restricted Environment**: The `ChatAgent` in `pa3_initial.py` can only use the functions passed as the `tools` parameter. This allows for selective exposure of functions, excluding potentially dangerous ones like `eval` or `exec`.
 
-## 파일 구조
+## File Structure
 
-- `pa3_initial.py`: `ChatAgent`를 초기화하고 실행하는 메인 스크립트입니다.
-- `wrapped_builtins.py`: 내장 함수를 래핑하고, 에이전트에 제공할 함수 목록(`wrapped_builtins`)을 관리합니다.
-- `README.md`: 프로젝트 설명서입니다.
-- `.gitignore`: Git에서 추적하지 않을 파일 목록입니다.
+- `pa3_initial.py`: The main script that initializes and runs the `ChatAgent`.
+- `wrapped_builtins.py`: Wraps built-in functions and manages the list of functions (`wrapped_builtins`) provided to the agent.
+- `README.md`: The project's documentation in Korean.
+- `README_EN.md`: The project's documentation in English.
+- `.gitignore`: A list of files to be ignored by Git.
 
-## 요구사항
+## Requirements
 
-- Python 3.8 이상
-- `python-dotenv`: `.env` 파일에서 환경 변수를 불러올 때 사용합니다.
-- `openai`: OpenAI API와 상호작용합니다.
-- `agent-framework`: Microsoft의 AI 에이전트 프레임워크입니다. [공식 GitHub](https://github.com/microsoft/agent-framework)에서 더 많은 정보를 확인할 수 있습니다.
+- Python 3.8+
+- `python-dotenv`: Used to load environment variables from a `.env` file.
+- `openai`: Interacts with the OpenAI API.
+- `agent-framework`: An AI agent framework from Microsoft. For more details, see the [official GitHub repository](https://github.com/microsoft/agent-framework).
 
-**의존성 설치 (가상환경 권장):**
+**Dependency Installation (Virtual Environment Recommended):**
 ```bash
-# Python 가상환경 생성 및 활성화
+# Create and activate a Python virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
 
-# requirements.txt 파일로부터 의존성 설치
-# 참고: agent-framework는 사전 출시(pre-release) 버전 설치가 필요할 수 있습니다.
+# Install dependencies from requirements.txt
+# Note: agent-framework may require a pre-release version.
 pip install -r requirements.txt --pre
 ```
 
-## 설정
+## Configuration
 
-프로젝트 실행을 위해 OpenAI API 정보가 필요합니다. 루트 디렉터리에 `.env` 파일을 생성하고 아래와 같이 환경 변수를 설정하세요.
+OpenAI API information is required to run the project. Create a `.env` file in the root directory and set the environment variables as shown below.
 
 ```env
-# .env 파일 예시
+# .env file example
 OPENAI_MODEL_NAME="gpt-4o"
 OPENAI_API_KEY="sk-..."
 OPENAI_ENDPOINT="https://api.openai.com/v1"
 ```
 
-## 사용법
+## Usage
 
-환경 변수 설정이 완료되었다면, 터미널에서 아래 방법으로 에이전트를 실행할 수 있습니다.
+Once the environment variables are set, you can run the agent from the terminal in the following ways.
 
-**1. 인자로 직접 쿼리 전달**
+**1. Pass a query directly as an argument**
 ```bash
 python pa3_initial.py "1 + 1"
 ```
 
-**2. 대화형 모드로 실행**
+**2. Run in interactive mode**
 ```bash
 python pa3_initial.py
 # Query: 0.043 - 0.001
 ```
 
-**3. 파이프(`|`)로 입력 전달**
+**3. Pass input via a pipe (`|`)**
 ```bash
 echo "2 * 3" | python pa3_initial.py
 ```
 
-`pa3_initial.py`는 `ChatAgent`를 생성하고 `run()` 함수를 호출하여 질의를 처리합니다. 결과는 `Response:`와 함께 표준 출력으로 표시됩니다.
+`pa3_initial.py` creates a `ChatAgent` and calls the `run()` function to process the query. The result is displayed on the standard output with a `Response:` prefix.
 
-## 확장 방법
+## Extension Method
 
-`wrapped_builtins`에 새로운 함수를 추가하려면:
+To add a new function to `wrapped_builtins`:
 
-1.  `wrapped_builtins.py` 파일에 `@wrap_builtin` 데코레이터를 사용해 새 `w_<name>` 함수를 정의합니다.
-2.  생성한 함수를 `wrapped_builtins` 리스트에 추가합니다.
-3.  `pa3_initial.py`에서 `tools` 매개변수로 해당 함수명을 전달하거나, 리스트 전체를 넘겨주도록 수정합니다.
+1.  Define a new `w_<name>` function in the `wrapped_builtins.py` file using the `@wrap_builtin` decorator.
+2.  Add the created function to the `wrapped_builtins` list.
+3.  Modify `pa3_initial.py` to pass the function name or the entire list to the `tools` parameter.
 
-> **⚠️ 보안 경고**
-> `eval`, `exec`과 같이 임의의 코드를 실행할 수 있는 함수를 에이전트에 노출하는 것은 심각한 보안 위험을 초래할 수 있습니다. 현재 코드에는 `w_eval`이 포함되어 있으니, 실제 운영 환경에서는 반드시 비활성화하거나 신중하게 사용해야 합니다.
+> **⚠️ Security Warning**
+> Exposing functions that can execute arbitrary code, such as `eval` or `exec`, to the agent can pose a serious security risk. The current code includes `w_eval`, so it must be disabled or used with caution in a real production environment.
 
-## 저자
+## Author
 
 Byeongki Jeong
 
-## 라이선스
+## License
 
 This project is licensed under the MIT License.
 
@@ -105,4 +106,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
